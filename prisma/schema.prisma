@@ -74,25 +74,26 @@ model Organizations {
   deleteScheduledAt DateTime?             @db.Date
 
   // Relations
-  owner             Users                     @relation(name: "owned_organizations", fields: [ownerId], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  users             Users[]                   @relation(name: "user_organizations")
-  invitations       OrganizationInvitations[]
-  crm_accounts      crm_Accounts[]
-  crm_leads         crm_Leads[]
-  crm_contacts      crm_Contacts[]
-  crm_opportunities crm_Opportunities[]
-  crm_contracts     crm_Contracts[]
-  invoices          Invoices[]
-  documents         Documents[]
-  tasks             Tasks[]
-  boards            Boards[]
-  sections          Sections[]
-  subscriptions     Subscriptions[]
-  paymentHistory    PaymentHistory[]
+  owner              Users                     @relation(name: "owned_organizations", fields: [ownerId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  users              Users[]                   @relation(name: "user_organizations")
+  invitations        OrganizationInvitations[]
+  crm_accounts       crm_Accounts[]
+  crm_leads          crm_Leads[]
+  crm_contacts       crm_Contacts[]
+  crm_opportunities  crm_Opportunities[]
+  crm_contracts      crm_Contracts[]
+  invoices           Invoices[]
+  documents          Documents[]
+  tasks              Tasks[]
+  boards             Boards[]
+  sections           Sections[]
+  subscriptions      Subscriptions[]
+  paymentHistory     PaymentHistory[]
   crm_accounts_tasks crm_Accounts_Tasks[]
-  usage             OrganizationUsage?
-  auditLogs         AuditLog[]
-  dataExports       DataExport[]
+  usage              OrganizationUsage?
+  auditLogs          AuditLog[]
+  dataExports        DataExport[]
+  repcoConfig        RepcoConfig?
 }
 
 // Organization Invitations Model
@@ -115,7 +116,6 @@ model OrganizationInvitations {
 
   @@index([organizationId])
   @@index([email])
-  @@index([token])
 }
 
 model crm_Accounts {
@@ -867,25 +867,23 @@ model PaymentHistory {
 
 // Organization Usage Tracking Model
 model OrganizationUsage {
-  id                     String              @id @default(auto()) @map("_id") @db.ObjectId
-  organizationId         String              @unique @db.ObjectId
-  usersCount             Int                 @default(0)
-  contactsCount          Int                 @default(0)
-  storageBytes           Int                 @default(0)
-  projectsCount          Int                 @default(0)
-  documentsCount         Int                 @default(0)
-  accountsCount          Int                 @default(0)
-  leadsCount             Int                 @default(0)
-  opportunitiesCount     Int                 @default(0)
-  tasksCount             Int                 @default(0)
-  lastCalculatedAt       DateTime?           @updatedAt @db.Date
-  createdAt              DateTime            @default(now()) @db.Date
-  updatedAt              DateTime?           @updatedAt @db.Date
+  id                 String    @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId     String    @unique @db.ObjectId
+  usersCount         Int       @default(0)
+  contactsCount      Int       @default(0)
+  storageBytes       Int       @default(0)
+  projectsCount      Int       @default(0)
+  documentsCount     Int       @default(0)
+  accountsCount      Int       @default(0)
+  leadsCount         Int       @default(0)
+  opportunitiesCount Int       @default(0)
+  tasksCount         Int       @default(0)
+  lastCalculatedAt   DateTime? @updatedAt @db.Date
+  createdAt          DateTime  @default(now()) @db.Date
+  updatedAt          DateTime? @updatedAt @db.Date
 
   // Relations
-  organization           Organizations       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-
-  @@index([organizationId])
+  organization Organizations @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 }
 
 // Audit Actions Enum
@@ -946,10 +944,9 @@ model UserSession {
   expiresAt              DateTime            @db.Date
 
   // Relations
-  user                   Users               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user Users @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([token])
   @@index([isActive])
 }
 
@@ -988,4 +985,37 @@ enum ExportStatus {
   COMPLETED
   FAILED
   EXPIRED
+}
+
+model RepcoConfig {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String @db.ObjectId
+  clientId    String
+  clientSecret String
+  username    String
+  password    String
+  locationId  String // e.g., "SYD01"
+  enabled     Boolean   @default(false)
+  token       String?
+  tokenExpiry DateTime?
+  createdAt   DateTime  @default(now())
+
+  organization Organizations @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId])
+}
+
+model RepcoPart {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  organizationId String @db.ObjectId
+  sku        String
+  name       String
+  brand      String
+  price      Float
+  stock      Int
+  location   String
+  vehicleFit Json?
+  lastSync   DateTime @default(now())
+
+  @@unique([organizationId, sku])
 }
