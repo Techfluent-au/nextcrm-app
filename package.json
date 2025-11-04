@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "prisma generate &&  prisma db push && prisma db seed && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "cypress:run": "cypress run"
   },
   "prisma": {
     "seed": "ts-node ./prisma/seeds/seed.ts"
@@ -15,7 +16,6 @@
     "@aws-sdk/client-s3": "^3.689.0",
     "@aws-sdk/s3-request-presigner": "^3.689.0",
     "@aws-sdk/signature-v4-crt": "^3.687.0",
-    "ioredis": "^5.4.1",
     "@hookform/resolvers": "^3.9.1",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@notionhq/client": "^2.2.15",
