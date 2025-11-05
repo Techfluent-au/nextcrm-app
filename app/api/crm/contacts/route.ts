@@ -5,6 +5,30 @@ import { authOptions } from "@/lib/auth";
 import sendEmail from "@/lib/sendmail";
 import { canCreateContact } from "@/lib/quota-enforcement";
 
+export async function GET(req: Request) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return new NextResponse("Unauthenticated", { status: 401 });
+  }
+
+  try {
+    if (!session.user.organizationId) {
+      return new NextResponse("User organization not found", { status: 401 });
+    }
+
+    const contacts = await prismadb.crm_Contacts.findMany({
+      where: {
+        organizationId: session.user.organizationId,
+      },
+    });
+
+    return NextResponse.json(contacts);
+  } catch (error) {
+    console.log("[CONTACTS_GET]", error);
+    return new NextResponse("Initial error", { status: 500 });
+  }
+}
+
 //Create route
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);

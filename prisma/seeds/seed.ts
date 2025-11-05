@@ -1,5 +1,6 @@
 //import { PrismaClient } from "@prisma/client";
 const { PrismaClient } = require("@prisma/client");
+const bcrypt = require("bcryptjs");
 /*
 Seed data is used to populate the database with initial data.
 */
@@ -88,6 +89,81 @@ async function main() {
   } else {
     console.log("GPT Models already seeded");
   }
+
+  // Clean up existing test data
+  await prisma.crm_Contacts.deleteMany({
+    where: {
+      email: {
+        in: ["contact1@org1.com"],
+      },
+    },
+  });
+
+  await prisma.users.deleteMany({
+    where: {
+      email: {
+        in: ["user1@org1.com", "user2@org2.com"],
+      },
+    },
+  });
+
+  await prisma.organizations.deleteMany({
+    where: {
+      slug: {
+        in: ["org1", "org2"],
+      },
+    },
+  });
+
+  // Create two organizations and two users
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash("password", salt);
+
+  const org1 = await prisma.organizations.create({
+    data: {
+      name: "Organization 1",
+      slug: "org1",
+      plan: "FREE",
+      stripeCustomerId: "org1-customer-id",
+      owner: {
+        create: {
+          email: "user1@org1.com",
+          password: hashedPassword,
+          name: "User 1",
+          userStatus: "ACTIVE",
+        },
+      },
+    },
+  });
+
+  const org2 = await prisma.organizations.create({
+    data: {
+      name: "Organization 2",
+      slug: "org2",
+      plan: "FREE",
+      stripeCustomerId: "org2-customer-id",
+      owner: {
+        create: {
+          email: "user2@org2.com",
+          password: hashedPassword,
+          name: "User 2",
+          userStatus: "ACTIVE",
+        },
+      },
+    },
+  });
+
+  // Create a contact in Organization 1
+  await prisma.crm_Contacts.create({
+    data: {
+      first_name: "Contact",
+      last_name: "One",
+      email: "contact1@org1.com",
+      organizationId: org1.id,
+    },
+  });
+
+  console.log("Test data for isolation test seeded successfully");
 
   console.log("-------- Seed DB completed --------");
 }
